@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+    <!-- Bootstrap CSS -->
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+          integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" rel="stylesheet">
+
+    <title>My Groceries</title>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h3>My Groceries List</h3>
+    <hr>
+    <a class="btn btn-success btn-sm mb-3" th:href="@{/groceries/showFormForAdd}">Add Stuff</a>
+    <a class="btn btn-primary btn-sm mb-3" th:href="@{/groceries/createRandomGrocery}">Let Me Pick For You</a>
+    <a class="btn btn-danger btn-sm mb-3"
+       onclick="if(!(confirm('Are you sure you want to delete all groceries?'))) return false"
+       th:href="@{/groceries/deleteAll}">Delete Everything</a>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Note</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:each="tempGrocery : ${groceries}">
+
+            <td th:text="${tempGrocery.productName}"/>
+            <td th:text="${tempGrocery.productQuantity}"/>
+            <td th:text="${tempGrocery.note}"/>
+            <td>
+                <a class="btn btn-primary btn-sm"
+                   th:href="@{/groceries/showFormForUpdate(groceryId=${tempGrocery.id})}">Update</a>
+                <a class="btn btn-warning btn-sm"
+                   onclick="if(!(confirm('Are you sure you want to delete this?'))) return false"
+                   th:href="@{/groceries/delete(groceryId=${tempGrocery.id})}">Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+</body>
+
+</html>
