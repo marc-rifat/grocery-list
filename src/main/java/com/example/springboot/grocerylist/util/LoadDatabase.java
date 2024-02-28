@@ -31,7 +31,7 @@ class LoadDatabase {
         Runnable openBrowser = () -> {
             try {
                 System.setProperty("java.awt.headless", "false");
-                Desktop.getDesktop().browse(new URI("http://localhost:8080/groceries/list"));
+                Desktop.getDesktop().browse(new URI("http://localhost:9999/groceries/list"));
                 log.info("Your default browser opened");
             } catch (Exception e) {
                 e.printStackTrace();
