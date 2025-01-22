@@ -5,6 +5,8 @@ import com.example.springboot.grocerylist.dao.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
     @Autowired
@@ -29,5 +31,18 @@ public class UserService {
 
     public boolean isUsernameAvailable(String username) {
         return userRepository.findByUsername(username).isEmpty();
+    }
+
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+    }
+
+    public void deleteById(Long id) {
+        userRepository.deleteById(id);
     }
 } 

@@ -11,3 +11,13 @@ spring:
     spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
   h2:
     console.enabled: true
+
+app:
+  admin:
+    username: admin
+    password: admin
+  default:
+    username: user
+    password: user
+  browser:
+    url: http://localhost:${server.port}/groceries/list

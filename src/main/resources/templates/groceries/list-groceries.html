@@ -111,7 +111,15 @@
                             <i class="fas fa-user me-1"></i>
                             <span th:text="${session.user.username}"></span>
                         </span>
-                        <a class="btn btn-outline-secondary btn-sm action-btn" th:href="@{/logout}" title="Logout">
+                        <a th:if="${session.user.admin}" 
+                           class="btn btn-outline-primary btn-sm action-btn" 
+                           th:href="@{/admin/users}" 
+                           title="User Management">
+                            <i class="fas fa-users"></i>
+                        </a>
+                        <a class="btn btn-outline-secondary btn-sm action-btn" 
+                           th:href="@{/logout}" 
+                           title="Logout">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>
