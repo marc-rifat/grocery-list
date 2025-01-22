@@ -21,32 +21,8 @@ A Spring Boot application for managing grocery lists with user authentication an
 ### Prerequisites
 - Java 17 or higher
 - Maven
-- MySQL
+- H2 Database
 
-### Installation
-
-1. Clone the repository
-```bash
-git clone [repository-url]
-```
-
-2. Configure database in `application.properties`
-```properties:grocery-list/README.md
-spring.datasource.url=jdbc:mysql://localhost:3306/your_database
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-server.port=9999
-```
-
-3. Run the application
-```bash:grocery-list/README.md
-mvn spring:boot run
-```
 
 The application will be available at `http://localhost:9999`
 
