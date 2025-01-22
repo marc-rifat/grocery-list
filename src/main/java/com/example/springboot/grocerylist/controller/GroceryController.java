@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -42,31 +43,55 @@ public class GroceryController {
     }
 
     @PostMapping("/save")
-    public String saveGrocery(@ModelAttribute("grocery") Grocery theGrocery) {
-        //save the grocery
+    public String saveGrocery(@ModelAttribute("grocery") Grocery theGrocery, RedirectAttributes redirectAttributes) {
+        boolean isUpdate = theGrocery.getId() != 0; // Check if this is an update operation
+        
+        // Save the grocery
         groceryService.save(theGrocery);
-        //use a redirect to prevent duplicate submissions
+        
+        // Add appropriate flash message
+        if (isUpdate) {
+            redirectAttributes.addFlashAttribute("success", 
+                String.format("Updated item: %s (%s)", theGrocery.getProductName(), theGrocery.getProductQuantity()));
+        } else {
+            redirectAttributes.addFlashAttribute("success", 
+                String.format("Added new item: %s (%s)", theGrocery.getProductName(), theGrocery.getProductQuantity()));
+        }
+        
         return "redirect:/groceries/list";
     }
 
     @GetMapping("/createRandomGrocery")
-    public String createRandomGrocery() {
-        groceryService.save(new Randomizer().makeRandomGrocery());
-        //use a redirect to prevent duplicate submissions
+    public String createRandomGrocery(RedirectAttributes redirectAttributes) {
+        Grocery grocery = new Randomizer().makeRandomGrocery();
+        groceryService.save(grocery);
+        redirectAttributes.addFlashAttribute("success", 
+            String.format("Added random item: %s (%s)", grocery.getProductName(), grocery.getProductQuantity()));
         return "redirect:/groceries/list";
     }
 
-    @GetMapping("/delete")
-    public String deleteGrocery(@RequestParam("groceryId") int theId) {
-        //delete grocery
-        groceryService.deleteById(theId);
+    @DeleteMapping("/delete")
+    public String deleteGrocery(@RequestParam("groceryId") int theId, 
+                              RedirectAttributes redirectAttributes) {
+        Grocery grocery = groceryService.findById(theId);
+        if (grocery == null) {
+            redirectAttributes.addFlashAttribute("error", "Nothing to delete - Item not found");
+        } else {
+            groceryService.deleteById(theId);
+            redirectAttributes.addFlashAttribute("success", "Item deleted successfully");
+        }
         return "redirect:/groceries/list";
     }
 
-    @GetMapping("/deleteAll")
-    public String deleteAllGroceries() {
-        //delete all groceries
-        groceryService.deleteAll();
+    @DeleteMapping("/deleteAll")
+    public String deleteAllGroceries(RedirectAttributes redirectAttributes) {
+        List<Grocery> groceries = groceryService.findAll();
+        if (groceries.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Nothing to delete - List is already empty");
+        } else {
+            groceryService.deleteAll();
+            redirectAttributes.addFlashAttribute("success", "All items deleted successfully");
+        }
         return "redirect:/groceries/list";
     }
 }

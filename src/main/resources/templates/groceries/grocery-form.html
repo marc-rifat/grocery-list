@@ -9,29 +9,130 @@
     <!-- Bootstrap CSS -->
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
           integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" rel="stylesheet">
-
+    
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <title>Save Grocery</title>
+
+    <style>
+        .container {
+            max-width: 900px !important;
+        }
+        
+        /* Make form more compact */
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Professional touches */
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-right: none;
+        }
+
+        .form-control {
+            border-left: none;
+        }
+
+        .form-control:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+
+        .page-title {
+            color: #2c3e50;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
 </head>
 
-<body>
-<div class="container">
-    <h3>Grocery</h3>
-    <hr>
-    <p class="h4 mb-4">Save Grocery</p>
-    <form action="#" method="POST"
-          th:action="@{/groceries/save}" th:object="${grocery}">
-        <!-- add hidden form field to handle the update -->
-        <input th:field="*{id}" type="hidden">
-        <input class="form-control mb-4 w-25" placeholder="Product Name" th:field="*{productName}" type="text">
-        <input class="form-control mb-4 w-25" placeholder="product Quantity" th:field="*{productQuantity}" type="text">
-        <input class="form-control mb-4 w-25" placeholder="Note" th:field="*{note}" type="text">
-        <button class="btn btn-success btn-sm" type="submit">Save it !</button>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="card-title mb-0">
+                        <i class="fas fa-shopping-basket text-success"></i>
+                        Edit Grocery Item
+                    </h2>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted me-2">
+                            <i class="fas fa-user me-1"></i>
+                            <span th:text="${session.user.username}"></span>
+                        </span>
+                        <a class="btn btn-outline-secondary btn-sm" th:href="@{/logout}">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="form-container">
+                    <form action="#" method="POST" th:action="@{/groceries/save}" th:object="${grocery}">
+                        <input th:field="*{id}" type="hidden">
+                        
+                        <div class="mb-3">
+                            <label for="productName" class="form-label">Product Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-shopping-cart"></i></span>
+                                <input class="form-control" id="productName" placeholder="Enter product name" 
+                                       th:field="*{productName}" type="text" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="productQuantity" class="form-label">Quantity</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-balance-scale"></i></span>
+                                <input class="form-control" id="productQuantity" placeholder="Enter quantity" 
+                                       th:field="*{productQuantity}" type="text" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="note" class="form-label">Note</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-sticky-note"></i></span>
+                                <input class="form-control" id="note" placeholder="Add a note (optional)" 
+                                       th:field="*{note}" type="text">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success btn-sm" type="submit">
+                                <i class="fas fa-save me-1"></i>Save
+                            </button>
+                            <a class="btn btn-outline-primary btn-sm" th:href="@{/groceries/list}">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    </form>
-
-    <hr>
-    <a class="btn btn-primary btn-sm" th:href="@{/groceries/list}" type="button">Return to My Grocery List</a>
-
-</div>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
