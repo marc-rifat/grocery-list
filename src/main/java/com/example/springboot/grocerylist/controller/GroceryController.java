@@ -1,8 +1,10 @@
 package com.example.springboot.grocerylist.controller;
 
 import com.example.springboot.grocerylist.entity.Grocery;
+import com.example.springboot.grocerylist.entity.User;
 import com.example.springboot.grocerylist.service.GroceryService;
 import com.example.springboot.grocerylist.util.Randomizer;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,14 +22,27 @@ public class GroceryController {
     @Autowired
     private GroceryService groceryService;
 
+    private User getCurrentUser(HttpSession session) {
+        return (User) session.getAttribute("user");
+    }
+
+    private boolean isAuthenticated(HttpSession session) {
+        return getCurrentUser(session) != null;
+    }
+
     @GetMapping("/list")
     public String listGroceryList(Model theModel,
-                                @RequestParam(defaultValue = "0") int page) {
-        // Create Pageable instance with 10 items per page
+                                @RequestParam(defaultValue = "0") int page,
+                                HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
+        User currentUser = getCurrentUser(session);
         Pageable pageable = PageRequest.of(page, 10);
         
-        // Get paginated groceries from database
-        Page<Grocery> groceryPage = groceryService.findAll(pageable);
+        // Get paginated groceries for current user
+        Page<Grocery> groceryPage = groceryService.findAllByUser(currentUser, pageable);
         
         // Add pagination attributes to the model
         theModel.addAttribute("groceries", groceryPage.getContent());
@@ -39,26 +54,57 @@ public class GroceryController {
     }
 
     @GetMapping("/showFormForAdd")
-    public String showFormForAdd(Model theModel) {
+    public String showFormForAdd(Model theModel, HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
         Grocery grocery = new Grocery();
+        grocery.setUser(getCurrentUser(session));
         theModel.addAttribute("grocery", grocery);
         return "groceries/grocery-form";
     }
 
     @GetMapping("/showFormForUpdate")
-    public String showFormForUpdate(@RequestParam("groceryId") int theId, Model theModel) {
-        //get the grocery from the service
-        Grocery grocery = groceryService.findById(theId);
+    public String showFormForUpdate(@RequestParam("groceryId") int theId, 
+                                  Model theModel,
+                                  HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
+        User currentUser = getCurrentUser(session);
+        Grocery grocery = groceryService.findByIdAndUser(theId, currentUser);
+        
+        if (grocery == null) {
+            return "redirect:/groceries/list";
+        }
+        
         theModel.addAttribute("grocery", grocery);
-        //set grocery in the model to prepopulate the form
         return "groceries/grocery-form";
     }
 
     @PostMapping("/save")
-    public String saveGrocery(@ModelAttribute("grocery") Grocery theGrocery, RedirectAttributes redirectAttributes) {
-        boolean isUpdate = theGrocery.getId() != 0; // Check if this is an update operation
+    public String saveGrocery(@ModelAttribute("grocery") Grocery theGrocery, 
+                            RedirectAttributes redirectAttributes,
+                            HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
         
-        // Save the grocery
+        User currentUser = getCurrentUser(session);
+        theGrocery.setUser(currentUser);
+        
+        boolean isUpdate = theGrocery.getId() != 0;
+        
+        // For updates, verify the grocery belongs to current user
+        if (isUpdate) {
+            Grocery existingGrocery = groceryService.findByIdAndUser(theGrocery.getId(), currentUser);
+            if (existingGrocery == null) {
+                return "redirect:/groceries/list";
+            }
+        }
+        
         groceryService.save(theGrocery);
         
         // Add appropriate flash message
@@ -74,8 +120,14 @@ public class GroceryController {
     }
 
     @GetMapping("/createRandomGrocery")
-    public String createRandomGrocery(RedirectAttributes redirectAttributes) {
+    public String createRandomGrocery(RedirectAttributes redirectAttributes,
+                                    HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
         Grocery grocery = new Randomizer().makeRandomGrocery();
+        grocery.setUser(getCurrentUser(session));
         groceryService.save(grocery);
         redirectAttributes.addFlashAttribute("success", 
             String.format("Added random item: %s (%s)", grocery.getProductName(), grocery.getProductQuantity()));
@@ -84,8 +136,15 @@ public class GroceryController {
 
     @DeleteMapping("/delete")
     public String deleteGrocery(@RequestParam("groceryId") int theId, 
-                              RedirectAttributes redirectAttributes) {
-        Grocery grocery = groceryService.findById(theId);
+                              RedirectAttributes redirectAttributes,
+                              HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
+        User currentUser = getCurrentUser(session);
+        Grocery grocery = groceryService.findByIdAndUser(theId, currentUser);
+        
         if (grocery == null) {
             redirectAttributes.addFlashAttribute("error", "Nothing to delete - Item not found");
         } else {
@@ -96,12 +155,19 @@ public class GroceryController {
     }
 
     @DeleteMapping("/deleteAll")
-    public String deleteAllGroceries(RedirectAttributes redirectAttributes) {
-        List<Grocery> groceries = groceryService.findAll();
+    public String deleteAllGroceries(RedirectAttributes redirectAttributes,
+                                   HttpSession session) {
+        if (!isAuthenticated(session)) {
+            return "redirect:/login";
+        }
+        
+        User currentUser = getCurrentUser(session);
+        List<Grocery> groceries = groceryService.findAllByUser(currentUser);
+        
         if (groceries.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Nothing to delete - List is already empty");
         } else {
-            groceryService.deleteAll();
+            groceryService.deleteAllByUser(currentUser);
             redirectAttributes.addFlashAttribute("success", "All items deleted successfully");
         }
         return "redirect:/groceries/list";

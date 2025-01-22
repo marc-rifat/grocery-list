@@ -2,11 +2,14 @@ package com.example.springboot.grocerylist.util;
 
 import com.example.springboot.grocerylist.dao.GroceryRepository;
 import com.example.springboot.grocerylist.dao.UserRepository;
+import com.example.springboot.grocerylist.entity.Grocery;
 import com.example.springboot.grocerylist.entity.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,50 +41,62 @@ class LoadDatabase {
     private String browserUrl;
 
     @Bean
-    CommandLineRunner initDatabase(GroceryRepository groceryRepository) {
+    CommandLineRunner initDatabase(GroceryRepository groceryRepository, UserRepository userRepository) {
         return args -> {
-            // Initialize sample groceries
-            for (int i = 0; i < 3; i++) {
-                groceryRepository.save(new Randomizer().makeRandomGrocery());
+            // Create default admin user if it doesn't exist
+            User adminUser = userRepository.findByUsername("admin")
+                .orElseGet(() -> {
+                    User newAdmin = new User("admin", "admin", true);
+                    return userRepository.save(newAdmin);
+                });
+
+            // Create regular user if it doesn't exist
+            User regularUser = userRepository.findByUsername("user")
+                .orElseGet(() -> {
+                    User newUser = new User("user", "user", false);
+                    return userRepository.save(newUser);
+                });
+
+            // Only add sample groceries if the repository is empty
+            if (groceryRepository.count() == 0) {
+                // Admin's groceries
+                Grocery milk = new Grocery("Milk", "1", "Whole milk");
+                milk.setUser(adminUser);
+                groceryRepository.save(milk);
+
+                Grocery bread = new Grocery("Bread", "2", "Whole wheat");
+                bread.setUser(adminUser);
+                groceryRepository.save(bread);
+
+                Grocery eggs = new Grocery("Eggs", "1", "Large, brown");
+                eggs.setUser(adminUser);
+                groceryRepository.save(eggs);
+
+                // Regular user's groceries
+                Grocery apples = new Grocery("Apples", "5", "Red delicious");
+                apples.setUser(regularUser);
+                groceryRepository.save(apples);
+
+                Grocery bananas = new Grocery("Bananas", "1", "Bunch");
+                bananas.setUser(regularUser);
+                groceryRepository.save(bananas);
+
+                log.info("Preloaded groceries for admin and regular user");
             }
-
-            // Log all preloaded groceries
-            groceryRepository.findAll()
-                    .forEach(grocery -> log.info("Preloaded {}", grocery));
-
-            // Initialize admin user
-            initializeAdminUser();
-            initializeUser();
         };
-    }
-
-    private void initializeAdminUser() {
-        if (userRepository.findByUsername(adminUsername).isEmpty()) {
-            User adminUser = new User(adminUsername, adminPassword, true);
-            userRepository.save(adminUser);
-            log.info("Created admin user");
-        }
-    }
-
-    private void initializeUser() {
-        if (userRepository.findByUsername(defaultUsername).isEmpty()) {
-            User user = new User(defaultUsername, defaultPassword, false);
-            userRepository.save(user);
-            log.info("Created user");
-        }
     }
 
     @Bean
-    public void openBrowser() {
-        Runnable openBrowser = () -> {
+    public ApplicationListener<ApplicationReadyEvent> openBrowser() {
+        return event -> {
             try {
+                Thread.sleep(1000); // Small delay to ensure server is ready
                 System.setProperty("java.awt.headless", "false");
                 Desktop.getDesktop().browse(new URI(browserUrl));
-                log.info("Your default browser opened");
+                log.info("Opening browser to {}", browserUrl);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Failed to open browser: {}", e.getMessage());
             }
         };
-        new Thread(openBrowser).start();
     }
 }

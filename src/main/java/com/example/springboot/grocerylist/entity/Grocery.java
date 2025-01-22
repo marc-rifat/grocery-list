@@ -28,6 +28,10 @@ public class Grocery {
     @Column(name = "note")
     private String note;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
     public Grocery(String productName, String productQuantity, String note) {
         this.productName = productName;
         this.productQuantity = productQuantity;
