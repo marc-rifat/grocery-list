@@ -3,6 +3,8 @@ package com.example.springboot.grocerylist.service;
 import com.example.springboot.grocerylist.dao.GroceryRepository;
 import com.example.springboot.grocerylist.entity.Grocery;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +22,12 @@ public class GroceryServiceImpl implements GroceryService {
 
     @Override
     public List<Grocery> findAll() {
-        return groceryRepository.findAllByOrderByIdDesc();
+        return groceryRepository.findAll();
+    }
+
+    @Override
+    public Page<Grocery> findAll(Pageable pageable) {
+        return groceryRepository.findAll(pageable);
     }
 
     @Override

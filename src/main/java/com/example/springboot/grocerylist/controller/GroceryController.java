@@ -4,6 +4,9 @@ import com.example.springboot.grocerylist.entity.Grocery;
 import com.example.springboot.grocerylist.service.GroceryService;
 import com.example.springboot.grocerylist.util.Randomizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,11 +21,20 @@ public class GroceryController {
     private GroceryService groceryService;
 
     @GetMapping("/list")
-    public String listGroceryList(Model theModel) {
-        //get all groceries from database
-        List<Grocery> groceryList = groceryService.findAll();
-        // add to the spring model
-        theModel.addAttribute("groceries", groceryList);
+    public String listGroceryList(Model theModel,
+                                @RequestParam(defaultValue = "0") int page) {
+        // Create Pageable instance with 10 items per page
+        Pageable pageable = PageRequest.of(page, 10);
+        
+        // Get paginated groceries from database
+        Page<Grocery> groceryPage = groceryService.findAll(pageable);
+        
+        // Add pagination attributes to the model
+        theModel.addAttribute("groceries", groceryPage.getContent());
+        theModel.addAttribute("currentPage", page);
+        theModel.addAttribute("totalPages", groceryPage.getTotalPages());
+        theModel.addAttribute("totalItems", groceryPage.getTotalElements());
+        
         return "groceries/list-groceries";
     }
 
