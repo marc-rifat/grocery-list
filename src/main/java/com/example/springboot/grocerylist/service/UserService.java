@@ -3,6 +3,7 @@ package com.example.springboot.grocerylist.service;
 import com.example.springboot.grocerylist.entity.User;
 import com.example.springboot.grocerylist.dao.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,9 +13,12 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public User authenticate(String username, String password) {
         return userRepository.findByUsername(username)
-                .filter(user -> user.getPassword().equals(password))
+                .filter(user -> passwordEncoder.matches(password, user.getPassword()))
                 .orElse(null);
     }
 
@@ -24,8 +28,9 @@ public class UserService {
             throw new Exception("Username already exists");
         }
 
-        // Create new user
-        User newUser = new User(username, password, false);
+        // Create new user with encrypted password
+        String encodedPassword = passwordEncoder.encode(password);
+        User newUser = new User(username, encodedPassword, false);
         return userRepository.save(newUser);
     }
 
@@ -45,4 +50,4 @@ public class UserService {
     public void deleteById(Long id) {
         userRepository.deleteById(id);
     }
-} 
+}

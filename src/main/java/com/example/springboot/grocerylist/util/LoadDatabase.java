@@ -13,6 +13,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.awt.*;
 import java.net.URI;
@@ -40,22 +41,27 @@ class LoadDatabase {
     @Value("${app.browser.url}")
     private String browserUrl;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Bean
     CommandLineRunner initDatabase(GroceryRepository groceryRepository, UserRepository userRepository) {
         return args -> {
             // Create default admin user if it doesn't exist
             User adminUser = userRepository.findByUsername("admin")
-                .orElseGet(() -> {
-                    User newAdmin = new User("admin", "admin", true);
-                    return userRepository.save(newAdmin);
-                });
+                    .orElseGet(() -> {
+                        User newAdmin = new User("admin",
+                                passwordEncoder.encode(adminPassword), true);
+                        return userRepository.save(newAdmin);
+                    });
 
             // Create regular user if it doesn't exist
             User regularUser = userRepository.findByUsername("user")
-                .orElseGet(() -> {
-                    User newUser = new User("user", "user", false);
-                    return userRepository.save(newUser);
-                });
+                    .orElseGet(() -> {
+                        User newUser = new User("user",
+                                passwordEncoder.encode(defaultPassword), false);
+                        return userRepository.save(newUser);
+                    });
 
             // Only add sample groceries if the repository is empty
             if (groceryRepository.count() == 0) {
